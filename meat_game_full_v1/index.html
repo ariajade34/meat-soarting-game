@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Muscle Fiber Meat Game</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f4f4f4; }
+    h1 { margin-bottom: 30px; }
+    .container, .zones { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+    .item { width: 140px; border: 2px solid #ccc; border-radius: 10px; padding: 10px; background: white; cursor: grab; }
+    .item img { width: 100%; height: auto; border-radius: 8px; }
+    .zone { width: 250px; min-height: 300px; border: 3px dashed #aaa; border-radius: 10px; padding: 10px; margin: 20px; background: #fff; }
+    .success { color: green; font-weight: bold; font-size: 18px; margin-top: 20px; }
+    button { margin: 8px; padding: 10px 15px; border: none; border-radius: 10px; background-color: #007bff; color: white; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+    img.quiz-img { width: 100%; max-height: 300px; object-fit: cover; border-radius: 12px; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <h1 id="game-title">Level 1: Sort the Meats</h1>
+  <div id="level1">
+    <div class="container" id="items">
+      <div class="item" draggable="true" id="ribeye" data-type="red">
+        <img src="ribeye.jpg" alt="Ribeye Steak" />
+        <p>Ribeye Steak</p>
+      </div>
+      <div class="item" draggable="true" id="pork" data-type="red">
+        <img src="pork.jpg" alt="Pork Tenderloin" />
+        <p>Pork Tenderloin</p>
+      </div>
+      <div class="item" draggable="true" id="chicken" data-type="white">
+        <img src="chicken.jpg" alt="Chicken Breast" />
+        <p>Chicken Breast</p>
+      </div>
+      <div class="item" draggable="true" id="turkey" data-type="white">
+        <img src="turkey.jpg" alt="Turkey Breast" />
+        <p>Turkey Breast</p>
+      </div>
+    </div>
+
+    <div class="zones">
+      <div class="zone" id="red-zone" ondragover="allowDrop(event)" ondrop="drop(event, 'red')">
+        <h2>🔴 Red Muscle Fibers</h2>
+      </div>
+      <div class="zone" id="white-zone" ondragover="allowDrop(event)" ondrop="drop(event, 'white')">
+        <h2>⚪ White Muscle Fibers</h2>
+      </div>
+    </div>
+
+    <div class="success" id="dragScoreBoard"></div>
+  </div>
+
+  <div id="quiz" style="display:none;">
+    <h2 id="question"></h2>
+    <img id="quizImage" class="quiz-img" src="" alt="">
+    <div id="options"></div>
+    <p id="feedback" style="font-weight:bold;"></p>
+  </div>
+
+  <script>
+    let score = 0;
+    const items = document.querySelectorAll('.item');
+    items.forEach(item => {
+      item.addEventListener('dragstart', ev => {
+        ev.dataTransfer.setData("text", ev.target.id);
+      });
+    });
+
+    function allowDrop(ev) { ev.preventDefault(); }
+
+    function drop(ev, type) {
+      ev.preventDefault();
+      const id = ev.dataTransfer.getData("text");
+      const el = document.getElementById(id);
+      if (el.getAttribute("data-type") === type) {
+        ev.target.appendChild(el);
+        score += 10;
+      } else {
+        score -= 5;
+        alert("❌ Incorrect! Try again.");
+      }
+      updateDragScore();
+    }
+
+    function updateDragScore() {
+      const red = document.getElementById("red-zone").children.length - 1;
+      const white = document.getElementById("white-zone").children.length - 1;
+      const total = red + white;
+      document.getElementById("dragScoreBoard").textContent = `Score: ${score}`;
+      if (total === 4) {
+        if (score >= 30) {
+          document.getElementById("game-title").textContent = "🎉 You made it to Level 2!";
+          setTimeout(startQuiz, 2000);
+        } else {
+          document.getElementById("game-title").textContent = "❌ You didn’t score enough to advance.";
+        }
+      }
+    }
+
+    // Quiz setup
+    const questions = [
+      {
+        question: "What muscle fiber type is found in beef steak?",
+        image: "ribeye-alt.jpg",
+        options: ["Red", "White", "Both", "Neither", "Dark", "Light"],
+        answer: "Red"
+      },
+      {
+        question: "What muscle fiber type is found in chicken breast?",
+        image: "chicken-alt.jpg",
+        options: ["White", "Red", "Both", "Lean", "Fast-twitch", "Fatty"],
+        answer: "White"
+      },
+      {
+        question: "What muscle fiber type is found in pork tenderloin?",
+        image: "cooked-pork.jpg",
+        options: ["Red", "White", "Both", "Pink", "Slow-twitch", "Lean"],
+        answer: "Red"
+      },
+      {
+        question: "How would you best cook beef steak?",
+        image: "ribeye-alt.jpg",
+        options: ["Grill", "Fry", "Slow-cook", "Boil", "Steam", "Roast"],
+        answer: "Grill"
+      },
+      {
+        question: "How would you best cook chicken breast?",
+        image: "chicken-alt.jpg",
+        options: ["Pan-fry", "Slow-cook", "Grill", "Roast", "Sauté", "Microwave"],
+        answer: "Pan-fry"
+      },
+      {
+        question: "How would you best cook pork tenderloin?",
+        image: "cooked-pork.jpg",
+        options: ["Sear and finish in the oven", "Grill", "Boil", "Steam", "Fry", "Bake"],
+        answer: "Sear and finish in the oven"
+      },
+      {
+        question: "Is this meat primarily made of fast- or slow-twitch fibers?",
+        image: "chicken-alt.jpg",
+        options: ["Fast-twitch", "Slow-twitch", "Intermediate", "Aerobic", "Oxidative", "Red-type"],
+        answer: "Fast-twitch"
+      },
+      {
+        question: "Is this pork tenderloin fast- or slow-twitch muscle?",
+        image: "pork.jpg",
+        options: ["Slow-twitch", "Fast-twitch", "Hybrid", "Pink-type", "Endurance", "Shock"],
+        answer: "Slow-twitch"
+      },
+      {
+        question: "Are ribeye steaks composed of fast- or slow-twitch fibers?",
+        image: "ribeye.jpg",
+        options: ["Fast-twitch", "Slow-twitch", "Type X", "Slick muscle", "Red blend", "White force"],
+        answer: "Fast-twitch"
+      }
+    ];
+
+    let current = 0;
+
+    function startQuiz() {
+      document.getElementById("level1").style.display = "none";
+      document.getElementById("quiz").style.display = "block";
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const q = questions[current];
+      document.getElementById("question").textContent = `Q${current + 1}: ${q.question}`;
+      document.getElementById("quizImage").src = q.image;
+      document.getElementById("feedback").textContent = "";
+      const opts = document.getElementById("options");
+      opts.innerHTML = "";
+      q.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt, q.answer);
+        opts.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selected, correct) {
+      if (selected === correct) {
+        document.getElementById("feedback").textContent = "✅ Correct!";
+        score += 10;
+      } else {
+        document.getElementById("feedback").textContent = `❌ Incorrect! Correct: ${correct}`;
+        score -= 5;
+      }
+      current++;
+      setTimeout(() => {
+        if (current < questions.length) {
+          showQuestion();
+        } else {
+          document.getElementById("quiz").innerHTML = `<h2>🎯 Game Over! Final Score: ${score}</h2>`;
+        }
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
