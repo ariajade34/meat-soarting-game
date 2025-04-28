@@ -69,16 +69,31 @@ let current = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
   const items = document.querySelectorAll('.item');
+
+  // Add touch support
+  items.forEach(item => {
+    item.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const element = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (element && element.classList.contains('item')) {
+        const fakeEvent = new DragEvent('dragstart', {dataTransfer: new DataTransfer()});
+        item.dispatchEvent(fakeEvent);
+      }
+    }, { passive: false });
+
+    // Normal dragstart
+    item.addEventListener('dragstart', ev => {
+      ev.dataTransfer.setData("text", ev.target.id);
+    });
+  });
+
   const dropzones = document.querySelectorAll('.zone');
-items.forEach(item => {
-  item.addEventListener('dragstart', ev => {
-    ev.dataTransfer.setData("text", ev.target.id);
+  dropzones.forEach(zone => {
+    zone.addEventListener('dragover', ev => ev.preventDefault());
+    zone.addEventListener('drop', drop);
   });
 });
-
-function allowDrop(ev) {
-  ev.preventDefault();
-}
 
 function drop(ev) {
   ev.preventDefault();
@@ -87,70 +102,6 @@ function drop(ev) {
   const dropzone = ev.target.closest('.zone');
 
   if (dropzone && draggedItem) {
-    if (dropzone.id.includes(draggedItem.getAttribute('data-type'))) {
-      dropzone.appendChild(draggedItem);
-      draggedItem.classList.add('sorted');
-      score += 10;
-    } else {
-      alert('❌ Incorrect drop! Try again.');
-      score -= 5;
-    }
-    updateScore();
-    checkIfLevelComplete();
-  }
-}
-
-  document.addEventListener('mousemove', dragging);
-  document.addEventListener('touchmove', dragging);
-
-  document.addEventListener('mouseup', endDrag);
-  document.addEventListener('touchend', endDrag);
-
-  dropzones.forEach(zone => {
-    zone.addEventListener('mouseup', dropItem);
-    zone.addEventListener('touchend', dropItem);
-  });
-});
-
-function startDrag(e) {
-  e.preventDefault();
-  isDragging = true;
-  draggedItem = e.target.closest('.item');
-  if (!draggedItem) return;
-
-  if (e.type === "touchstart") {
-    offsetX = e.touches[0].clientX - draggedItem.getBoundingClientRect().left;
-    offsetY = e.touches[0].clientY - draggedItem.getBoundingClientRect().top;
-  } else {
-    offsetX = e.offsetX;
-    offsetY = e.offsetY;
-  }
-}
-
-function dragging(e) {
-  if (!isDragging || !draggedItem) return;
-
-  let x, y;
-  if (e.type === "touchmove") {
-    x = e.touches[0].clientX;
-    y = e.touches[0].clientY;
-  } else {
-    x = e.clientX;
-    y = e.clientY;
-  }
-  draggedItem.style.position = 'absolute';
-  draggedItem.style.left = (x - offsetX) + 'px';
-  draggedItem.style.top = (y - offsetY) + 'px';
-}
-
-function endDrag() {
-  isDragging = false;
-}
-
-function dropItem(e) {
-  if (!draggedItem) return;
-  const dropzone = e.target.closest('.zone');
-  if (dropzone) {
     if (dropzone.id.includes(draggedItem.getAttribute("data-type"))) {
       dropzone.appendChild(draggedItem);
       draggedItem.classList.add('sorted');
@@ -159,27 +110,11 @@ function dropItem(e) {
       alert('❌ Incorrect drop! Try again.');
       score -= 5;
     }
-    draggedItem = null;
     updateScore();
     checkIfLevelComplete();
   }
 }
 
-function updateScore() {
-  document.getElementById("dragScoreBoard").textContent = `Score: ${score}`;
-}
-
-function checkIfLevelComplete() {
-  const unsorted = document.querySelectorAll('.item:not(.sorted)');
-  if (unsorted.length === 0) {
-    if (score >= 30) {
-      document.getElementById("game-title").textContent = "🎉 You made it to Level 2!";
-      setTimeout(startQuiz, 1500);
-    } else {
-      document.getElementById("game-title").textContent = "❌ You didn’t score enough to advance.";
-    }
-  }
-}
 
 // === QUIZ CODE ===
 const questions = [
