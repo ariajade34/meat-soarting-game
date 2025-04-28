@@ -71,10 +71,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const items = document.querySelectorAll('.item');
   const dropzones = document.querySelectorAll('.zone');
 
-  items.forEach(item => {
-    item.addEventListener('mousedown', startDrag);
-    item.addEventListener('touchstart', startDrag);
-  });
+// Add touch support
+items.forEach(item => {
+  item.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (element && element.classList.contains('item')) {
+      const fakeEvent = new DragEvent('dragstart', {dataTransfer: new DataTransfer()});
+      item.dispatchEvent(fakeEvent);
+    }
+  }, { passive: false });
+});
+
 
   document.addEventListener('mousemove', dragging);
   document.addEventListener('touchmove', dragging);
