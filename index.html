@@ -198,6 +198,201 @@
         }
       }, 1500);
     }
-  </script>
+let draggedItem = null;
+let offsetX = 0;
+let offsetY = 0;
+let isDragging = false;
+let currentLevel = 1;
+let score = 0;
+let current = 0;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const items = document.querySelectorAll('.item');
+  const dropzones = document.querySelectorAll('.zone');
+
+  items.forEach(item => {
+    item.addEventListener('mousedown', startDrag);
+    item.addEventListener('touchstart', startDrag);
+  });
+
+  document.addEventListener('mousemove', dragging);
+  document.addEventListener('touchmove', dragging);
+
+  document.addEventListener('mouseup', endDrag);
+  document.addEventListener('touchend', endDrag);
+
+  dropzones.forEach(zone => {
+    zone.addEventListener('mouseup', dropItem);
+    zone.addEventListener('touchend', dropItem);
+  });
+});
+
+function startDrag(e) {
+  e.preventDefault();
+  isDragging = true;
+  draggedItem = e.target.closest('.item');
+  if (!draggedItem) return;
+
+  if (e.type === "touchstart") {
+    offsetX = e.touches[0].clientX - draggedItem.getBoundingClientRect().left;
+    offsetY = e.touches[0].clientY - draggedItem.getBoundingClientRect().top;
+  } else {
+    offsetX = e.offsetX;
+    offsetY = e.offsetY;
+  }
+}
+
+function dragging(e) {
+  if (!isDragging || !draggedItem) return;
+
+  let x, y;
+  if (e.type === "touchmove") {
+    x = e.touches[0].clientX;
+    y = e.touches[0].clientY;
+  } else {
+    x = e.clientX;
+    y = e.clientY;
+  }
+  draggedItem.style.position = 'absolute';
+  draggedItem.style.left = (x - offsetX) + 'px';
+  draggedItem.style.top = (y - offsetY) + 'px';
+}
+
+function endDrag() {
+  isDragging = false;
+}
+
+function dropItem(e) {
+  if (!draggedItem) return;
+  const dropzone = e.target.closest('.zone');
+  if (dropzone) {
+    if (dropzone.id.includes(draggedItem.getAttribute("data-type"))) {
+      dropzone.appendChild(draggedItem);
+      draggedItem.classList.add('sorted');
+      score += 10;
+    } else {
+      alert('❌ Incorrect drop! Try again.');
+      score -= 5;
+    }
+    draggedItem = null;
+    updateScore();
+    checkIfLevelComplete();
+  }
+}
+
+function updateScore() {
+  document.getElementById("dragScoreBoard").textContent = `Score: ${score}`;
+}
+
+function checkIfLevelComplete() {
+  const unsorted = document.querySelectorAll('.item:not(.sorted)');
+  if (unsorted.length === 0) {
+    if (score >= 30) {
+      document.getElementById("game-title").textContent = "🎉 You made it to Level 2!";
+      setTimeout(startQuiz, 1500);
+    } else {
+      document.getElementById("game-title").textContent = "❌ You didn’t score enough to advance.";
+    }
+  }
+}
+
+// === QUIZ CODE ===
+
+const questions = [
+  {
+    question: "What muscle fiber type is found in beef steak?",
+    image: "ribeye-alt.jpg",
+    options: ["Red", "White", "Both", "Neither", "Dark", "Light"],
+    answer: "Red"
+  },
+  {
+    question: "What muscle fiber type is found in chicken breast?",
+    image: "chicken-alt.jpg",
+    options: ["White", "Red", "Both", "Lean", "Fast-twitch", "Fatty"],
+    answer: "White"
+  },
+  {
+    question: "What muscle fiber type is found in pork tenderloin?",
+    image: "cooked-pork.jpg",
+    options: ["Red", "White", "Both", "Pink", "Slow-twitch", "Lean"],
+    answer: "Red"
+  },
+  {
+    question: "How would you best cook beef steak?",
+    image: "ribeye-alt.jpg",
+    options: ["Grill", "Fry", "Slow-cook", "Boil", "Steam", "Roast"],
+    answer: "Grill"
+  },
+  {
+    question: "How would you best cook chicken breast?",
+    image: "chicken-alt.jpg",
+    options: ["Pan-fry", "Slow-cook", "Grill", "Roast", "Sauté", "Microwave"],
+    answer: "Pan-fry"
+  },
+  {
+    question: "How would you best cook pork tenderloin?",
+    image: "cooked-pork.jpg",
+    options: ["Sear and finish in the oven", "Grill", "Boil", "Steam", "Fry", "Bake"],
+    answer: "Sear and finish in the oven"
+  },
+  {
+    question: "Is this meat primarily made of fast- or slow-twitch fibers?",
+    image: "chicken-alt.jpg",
+    options: ["Fast-twitch", "Slow-twitch", "Intermediate", "Aerobic", "Oxidative", "Red-type"],
+    answer: "Fast-twitch"
+  },
+  {
+    question: "Is this pork tenderloin fast- or slow-twitch muscle?",
+    image: "pork.jpg",
+    options: ["Slow-twitch", "Fast-twitch", "Hybrid", "Pink-type", "Endurance", "Shock"],
+    answer: "Slow-twitch"
+  },
+  {
+    question: "Are ribeye steaks composed of fast- or slow-twitch fibers?",
+    image: "ribeye.jpg",
+    options: ["Fast-twitch", "Slow-twitch", "Type X", "Slick muscle", "Red blend", "White force"],
+    answer: "Fast-twitch"
+  }
+];
+
+function startQuiz() {
+  document.getElementById("level1").style.display = "none";
+  document.getElementById("quiz").style.display = "block";
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[current];
+  document.getElementById("question").textContent = `Q${current + 1}: ${q.question}`;
+  document.getElementById("quizImage").src = q.image;
+  document.getElementById("feedback").textContent = "";
+  const opts = document.getElementById("options");
+  opts.innerHTML = "";
+  q.options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.textContent = opt;
+    btn.onclick = () => checkAnswer(opt, q.answer);
+    opts.appendChild(btn);
+  });
+}
+
+function checkAnswer(selected, correct) {
+  if (selected === correct) {
+    document.getElementById("feedback").textContent = "✅ Correct!";
+    score += 10;
+  } else {
+    document.getElementById("feedback").textContent = `❌ Incorrect! Correct: ${correct}`;
+    score -= 5;
+  }
+  current++;
+  setTimeout(() => {
+    if (current < questions.length) {
+      showQuestion();
+    } else {
+      document.getElementById("quiz").innerHTML = `<h2>🎯 Game Over! Final Score: ${score}</h2>`;
+    }
+  }, 1500);
+}
+
 </body>
 </html>
