@@ -70,20 +70,35 @@ let current = 0;
 document.addEventListener('DOMContentLoaded', () => {
   const items = document.querySelectorAll('.item');
   const dropzones = document.querySelectorAll('.zone');
-
-// Add touch support
 items.forEach(item => {
-  item.addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (element && element.classList.contains('item')) {
-      const fakeEvent = new DragEvent('dragstart', {dataTransfer: new DataTransfer()});
-      item.dispatchEvent(fakeEvent);
-    }
-  }, { passive: false });
+  item.addEventListener('dragstart', ev => {
+    ev.dataTransfer.setData("text", ev.target.id);
+  });
 });
 
+function allowDrop(ev) {
+  ev.preventDefault();
+}
+
+function drop(ev) {
+  ev.preventDefault();
+  const id = ev.dataTransfer.getData("text");
+  const draggedItem = document.getElementById(id);
+  const dropzone = ev.target.closest('.zone');
+
+  if (dropzone && draggedItem) {
+    if (dropzone.id.includes(draggedItem.getAttribute('data-type'))) {
+      dropzone.appendChild(draggedItem);
+      draggedItem.classList.add('sorted');
+      score += 10;
+    } else {
+      alert('❌ Incorrect drop! Try again.');
+      score -= 5;
+    }
+    updateScore();
+    checkIfLevelComplete();
+  }
+}
 
   document.addEventListener('mousemove', dragging);
   document.addEventListener('touchmove', dragging);
